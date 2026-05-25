@@ -160,7 +160,7 @@ input:focus,select:focus{border-color:var(--text3);}
   <div class="hero">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
       <div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:2px;">Credit card</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:2px;">Outstanding balance</div>
         <div style="font-size:18px;font-weight:600;" id="dash-card-name">My Card</div>
       </div>
       <button class="hero-settings" onclick="openSettings()"><i class="ti ti-settings"></i></button>
@@ -375,8 +375,8 @@ function renderDash() {
   const owe      = Math.max(total - paid, 0);
 
   document.getElementById('dash-card-name').textContent = settings.name;
-  document.getElementById('dash-total').textContent     = fmt(total);
-  document.getElementById('dash-sub').textContent       = 'of ' + fmt(bud) + ' budget';
+  document.getElementById('dash-total').textContent     = fmt(owe);
+  document.getElementById('dash-sub').textContent       = fmt(total) + ' spent · ' + fmt(bud) + ' budget';
   document.getElementById('dash-pct').textContent       = Math.round(pct) + '% used';
   document.getElementById('dash-remain').textContent    = fmt(Math.max(bud - total, 0)) + ' left';
   document.getElementById('dash-paid').textContent      = fmt(paid);
