@@ -177,7 +177,7 @@ input:focus,select:focus{border-color:var(--text3);}
         <div class="bill-val" id="dash-owe" style="color:var(--red);">₨0</div>
       </div>
       <div class="bill-stat" style="text-align:right;">
-        <div class="bill-label">Paid so far</div>
+        <div class="bill-label">Total paid</div>
         <div class="bill-val" id="dash-paid" style="color:var(--green);">₨0</div>
       </div>
     </div>
@@ -322,7 +322,10 @@ function updateMonthLabel() {
 }
 function changeMonth(dir) {
   const [y,m] = viewMonth.split('-').map(Number);
-  viewMonth = new Date(y, m-1+dir, 1).toISOString().slice(0,7);
+  const d = new Date(y, m-1+dir, 1);
+  const ny = d.getFullYear();
+  const nm = String(d.getMonth()+1).padStart(2,'0');
+  viewMonth = ny + '-' + nm;
   updateMonthLabel(); renderDash();
 }
 
@@ -370,16 +373,21 @@ function renderDash() {
   const total    = monthExp.reduce((s,e) => s + e.amount, 0);
   const bud      = settings.budget;
   const pct      = bud > 0 ? Math.min((total/bud)*100, 100) : 0;
+
+  // All-time running balance (not month-scoped)
+  const allTimeSpent = expenses.reduce((s,e) => s + e.amount, 0);
+  const allTimePaid  = payments.reduce((s,p) => s + p.amount, 0);
+  const owe          = Math.max(allTimeSpent - allTimePaid, 0);
+
   const monthPay = payments.filter(p => p.date.slice(0,7) === viewMonth);
   const paid     = monthPay.reduce((s,p) => s + p.amount, 0);
-  const owe      = Math.max(total - paid, 0);
 
   document.getElementById('dash-card-name').textContent = settings.name;
   document.getElementById('dash-total').textContent     = fmt(owe);
-  document.getElementById('dash-sub').textContent       = fmt(total) + ' spent · ' + fmt(bud) + ' budget';
+  document.getElementById('dash-sub').textContent       = fmt(total) + ' this month · ' + fmt(bud) + ' budget';
   document.getElementById('dash-pct').textContent       = Math.round(pct) + '% used';
   document.getElementById('dash-remain').textContent    = fmt(Math.max(bud - total, 0)) + ' left';
-  document.getElementById('dash-paid').textContent      = fmt(paid);
+  document.getElementById('dash-paid').textContent      = fmt(allTimePaid);
   document.getElementById('dash-owe').textContent       = fmt(owe);
   document.getElementById('dash-owe').style.color       = owe === 0 ? 'var(--green)' : 'var(--red)';
 
@@ -485,10 +493,9 @@ function renderPayments() {
 }
 
 function openPayBill() {
-  const thisMonth = new Date().toISOString().slice(0,7);
-  const spent = expenses.filter(e => e.date.slice(0,7) === thisMonth).reduce((s,e) => s+e.amount, 0);
-  const paid  = payments.filter(p => p.date.slice(0,7) === thisMonth).reduce((s,p) => s+p.amount, 0);
-  const owe   = Math.max(spent - paid, 0);
+  const allTimeSpent = expenses.reduce((s,e) => s + e.amount, 0);
+  const allTimePaid  = payments.reduce((s,p) => s + p.amount, 0);
+  const owe   = Math.max(allTimeSpent - allTimePaid, 0);
   document.getElementById('pb-summary').textContent = 'Outstanding balance: ' + fmt(owe);
   document.getElementById('pb-amount').value = '';
   document.getElementById('pb-date').value   = todayStr();
